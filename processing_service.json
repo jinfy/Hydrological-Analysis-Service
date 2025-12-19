@@ -1,0 +1,162 @@
+[
+  {
+    "name": "fill_dem",
+    "descr": "Fill sinks in DEM.",
+    "input": "raw DEM raster",
+    "output": "filled DEM raster",
+    "in_fields": ["src_dem_tif"],
+    "out_fields": ["dem_filled_tif"],
+    "api": {
+      "method": "POST",
+      "path": "/v1/dem/fill"
+    }
+  },
+  {
+    "name": "flow_direction",
+    "descr": "Derive flow direction raster.",
+    "input": "filled DEM raster",
+    "output": "flow direction raster",
+    "in_fields": ["dem_filled_tif"],
+    "out_fields": ["flowdir_tif"],
+    "api": {
+      "method": "POST",
+      "path": "/v1/hydro/flow-direction"
+    }
+  },
+  {
+    "name": "flow_accumulation",
+    "descr": "Derive flow accumulation raster.",
+    "input": "filled DEM raster",
+    "output": "flow accumulation raster",
+    "in_fields": ["dem_filled_tif"],
+    "out_fields": ["accum_tif"],
+    "api": {
+      "method": "POST",
+      "path": "/v1/hydro/flow-accumulation"
+    }
+  },
+  {
+    "name": "extract_streams",
+    "descr": "Set threshold for stream initiation and derive stream raster.",
+    "input": "filled DEM raster; flow accumulation raster",
+    "output": "stream raster",
+    "in_fields": ["dem_filled_tif", "accum_tif"],
+    "out_fields": ["streams_tif"],
+    "api": {
+      "method": "POST",
+      "path": "/v1/hydro/streams"
+    }
+  },
+  {
+    "name": "raster_to_geojson",
+    "descr": "Convert stream raster to polyline.",
+    "input": "stream raster",
+    "output": "stream polylines (GeoJSON)",
+    "in_fields": ["raster_tif"],
+    "out_fields": {
+      "mode=path": ["geojson_path"],
+      "mode=json": ["geojson"]
+    },
+    "api": {
+      "method": "POST",
+      "path": "/v1/convert/raster-to-geojson"
+    }
+  },
+
+  {
+    "name": "arcgis_buffer",
+    "descr": "Buffer features.",
+    "input": "vector features; buffer distance",
+    "output": "buffer polygons",
+    "in_fields": ["in_features", "buffer_distance", "out_features", "env_result_dir"],
+    "out_fields": ["out_features", "out_url", "job_dir"],
+    "api": { "method": "POST", "path": "/v1/arcgis/buffer" }
+  },
+  {
+    "name": "arcgis_intersect",
+    "descr": "Intersect layers.",
+    "input": "vector feature layers",
+    "output": "intersection features",
+    "in_fields": ["in_features_list", "out_features", "env_result_dir"],
+    "out_fields": ["out_features", "out_url", "job_dir"],
+    "api": { "method": "POST", "path": "/v1/arcgis/intersect" }
+  },
+  {
+    "name": "arcgis_clip",
+    "descr": "Clip features.",
+    "input": "vector features; clip boundary",
+    "output": "clipped features",
+    "in_fields": ["in_features", "clip_features", "out_features", "env_result_dir"],
+    "out_fields": ["out_features", "out_url", "job_dir"],
+    "api": { "method": "POST", "path": "/v1/arcgis/clip" }
+  },
+  {
+    "name": "arcgis_union",
+    "descr": "Union polygons.",
+    "input": "polygon layers",
+    "output": "union polygons",
+    "in_fields": ["in_features_list", "out_features", "env_result_dir"],
+    "out_fields": ["out_features", "out_url", "job_dir"],
+    "api": { "method": "POST", "path": "/v1/arcgis/union" }
+  },
+  {
+    "name": "arcgis_dissolve",
+    "descr": "Dissolve features.",
+    "input": "vector features; dissolve fields",
+    "output": "dissolved features",
+    "in_fields": ["in_features", "dissolve_fields", "out_features", "env_result_dir"],
+    "out_fields": ["out_features", "out_url", "job_dir"],
+    "api": { "method": "POST", "path": "/v1/arcgis/dissolve" }
+  },
+  {
+    "name": "arcgis_erase",
+    "descr": "Erase overlaps.",
+    "input": "input features; erase features",
+    "output": "erased features",
+    "in_fields": ["in_features", "erase_features", "out_features", "env_result_dir"],
+    "out_fields": ["out_features", "out_url", "job_dir"],
+    "api": { "method": "POST", "path": "/v1/arcgis/erase" }
+  },
+  {
+    "name": "arcgis_merge",
+    "descr": "Merge feature classes.",
+    "input": "vector feature classes",
+    "output": "merged features",
+    "in_fields": ["in_features_list", "out_features", "env_result_dir"],
+    "out_fields": ["out_features", "out_url", "job_dir"],
+    "api": { "method": "POST", "path": "/v1/arcgis/merge" }
+  },
+  {
+    "name": "arcgis_spatial_join",
+    "descr": "Spatial attribute join.",
+    "input": "target features; join features",
+    "output": "spatially joined features",
+    "in_fields": ["target_features", "join_features", "out_features", "env_result_dir"],
+    "out_fields": ["out_features", "out_url", "job_dir"],
+    "api": { "method": "POST", "path": "/v1/arcgis/spatial-join" }
+  },
+  {
+    "name": "Xinanjiang model",
+    "descr": "The Xinanjiang model is a rainfall-runoff, distributed, basin hydrological model for use in humid and semi-humid regions.",
+    "input": "rainfall data",
+    "output": "predict future runoff data",
+    "in_fields": ["rainfall_data_table"],
+    "out_fields": ["future_rainoff_prediction_table"],
+    "api": {
+      "method": "POST",
+      "path": "/v1/hydro/future-runoff-prediction"
+    }
+  },
+  {
+    "name": "hydrological model",
+    "descr": "A hydrological model for testing ",
+    "input": "param1",
+    "output": "param2",
+    "in_fields": ["param1"],
+    "out_fields": ["param2"],
+    "api": {
+      "method": "POST",
+      "path": "/v1/hydro/test_model"
+    }
+  }
+]

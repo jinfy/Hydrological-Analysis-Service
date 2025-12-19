@@ -1,0 +1,1217 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chain Generator UI (Vue CDN)</title>
+
+  <script src="https://unpkg.com/vue@3/dist/vue.global.prod.js"></script>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f5f7fb;
+      color: #1b1f2a;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+    }
+
+    .app {
+      height: 100vh;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 240px 1fr 380px;
+      overflow: hidden;
+    }
+
+    /* ============ Left ============ */
+    .sidebar {
+      background: #1f2b3a;
+      color: #dbe5f2;
+      display: flex;
+      flex-direction: column;
+      border-right: 1px solid rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+    }
+
+    .brand {
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+      flex: 0 0 auto;
+    }
+
+    .brand .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #34d399;
+    }
+
+    .brand-title {
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .menu {
+      padding: 10px 8px;
+      overflow: auto;
+    }
+
+    .menu-section {
+      margin: 14px 10px 6px;
+      font-size: 12px;
+      opacity: 0.7;
+    }
+
+    .menu-item {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 10px;
+      border-radius: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .menu-item:hover { background: rgba(255, 255, 255, 0.06); }
+    .menu-item.active { background: rgba(59, 130, 246, 0.22); }
+
+    .icon { width: 20px; text-align: center; }
+
+    /* ============ Middle ============ */
+    .main {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      min-width: 0;
+      overflow: hidden;
+      background: #f7f9fe;
+    }
+
+    .topbar {
+      background: #ffffff;
+      border-bottom: 1px solid #e7ebf3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 8px 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      border: 1px solid #d9e1ef;
+      background: #ffffff;
+      color: #23314a;
+      padding: 8px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: transform 0.02s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: #f4f7ff; }
+    .btn:active { transform: translateY(1px); }
+
+    .btn.primary {
+      border-color: rgba(59, 130, 246, 0.35);
+      background: rgba(59, 130, 246, 0.12);
+    }
+
+    .btn.danger {
+      border-color: rgba(239, 68, 68, 0.35);
+      background: rgba(239, 68, 68, 0.10);
+    }
+
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .canvas-wrap {
+      min-width: 0;
+      overflow: auto;
+      padding: 16px;
+    }
+
+    .canvas {
+      background: rgba(255, 255, 255, 0.75);
+      border: 1px dashed #cfd8ea;
+      border-radius: 16px;
+      min-height: calc(100vh - 56px - 32px);
+      padding: 18px;
+      display: grid;
+      place-content: center;
+      text-align: center;
+    }
+
+    .empty-title {
+      font-weight: 700;
+      margin-bottom: 6px;
+      color: #2a3550;
+    }
+
+    .empty-desc {
+      font-size: 13px;
+      color: #6b7a95;
+      max-width: 560px;
+    }
+
+    .hint { font-size: 12px; color: #6b7a95; }
+
+    /* ==== Workflow SVG styles ==== */
+    .wf-wrap {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 12px;
+    }
+
+    .wf-stage {
+      width: 100%;
+      border: 1px solid #e7ebf3;
+      background: #ffffff;
+      border-radius: 14px;
+      overflow: auto;
+      padding: 10px;
+      min-height: 520px;
+      scrollbar-gutter: stable both-edges;
+    }
+
+    .wf-legend {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      color: #6b7a95;
+      font-size: 12px;
+    }
+
+    .wf-chip {
+      border: 1px solid #d9e1ef;
+      background: #f7f9fe;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #2a3550;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .wf-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 6px;
+      background: #bbf7d0;
+      border: 1px solid #34d399;
+    }
+
+    .wf-dot.orange {
+      background: #fdba74;
+      border: 1px solid #f97316;
+    }
+
+    /* ============ Right ============ */
+    .right {
+      background: #ffffff;
+      border-left: 1px solid #e7ebf3;
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .right-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      border-bottom: 1px solid #e7ebf3;
+      font-weight: 700;
+      color: #243045;
+    }
+
+    .pill {
+      font-weight: 600;
+      font-size: 12px;
+      color: #2a3550;
+      border: 1px solid #d9e1ef;
+      background: #f7f9fe;
+      padding: 6px 10px;
+      border-radius: 999px;
+    }
+
+    .panel {
+      overflow: hidden;
+      padding: 12px;
+      display: grid;
+      grid-template-rows: auto auto 1fr;
+      gap: 10px;
+      min-height: 0;
+    }
+
+    .preset-card {
+      border: 1px solid #e7ebf3;
+      border-radius: 14px;
+      background: #fbfcff;
+      padding: 12px;
+    }
+
+    .preset-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .preset-title h3 {
+      margin: 0;
+      font-size: 13px;
+      color: #243045;
+    }
+
+    .preset-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tab {
+      border: 1px solid #d9e1ef;
+      background: #ffffff;
+      color: #243045;
+      padding: 8px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+      max-width: 100%;
+    }
+
+    .tab:hover { background: #f4f7ff; }
+
+    .tab.active {
+      border-color: rgba(59, 130, 246, 0.45);
+      background: rgba(59, 130, 246, 0.10);
+    }
+
+    .tab .small { opacity: 0.75; margin-left: 6px; font-size: 11px; }
+
+    .submit-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6b7a95;
+      margin-right: auto;
+      min-width: 0;
+    }
+
+    .s-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9ca3af;
+      flex: 0 0 auto;
+    }
+
+    .s-dot.ok { background: #34d399; }
+    .s-dot.busy { background: #60a5fa; }
+    .s-dot.err { background: #fb7185; }
+
+    .status-text {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .chat-box {
+      border: 1px solid #e7ebf3;
+      border-radius: 14px;
+      background: #ffffff;
+      overflow: hidden;
+      min-height: 0;
+      display: grid;
+      grid-template-rows: 44px 1fr;
+    }
+
+    .chat-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      border-bottom: 1px solid #eef2fb;
+      background: #fbfcff;
+    }
+
+    .chat-head h3 {
+      margin: 0;
+      font-size: 13px;
+      color: #243045;
+    }
+
+    .chat-body {
+      padding: 12px;
+      overflow: auto;
+      background: #ffffff;
+      min-height: 0;
+    }
+
+    .msg {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: flex-start;
+    }
+
+    .avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1px solid #e7ebf3;
+      background: linear-gradient(135deg, #93c5fd, #a7f3d0);
+      flex: 0 0 auto;
+      margin-top: 2px;
+    }
+
+    .avatar.user { background: linear-gradient(135deg, #fbcfe8, #fde68a); }
+
+    .bubble {
+      max-width: 100%;
+      border: 1px solid #eef2fb;
+      background: #f7f9fe;
+      border-radius: 14px;
+      padding: 10px 12px;
+      line-height: 1.55;
+      color: #22304a;
+      font-size: 13px;
+      min-width: 0;
+    }
+
+    .bubble.user { background: #ffffff; }
+
+    .meta {
+      font-size: 11px;
+      color: #6b7a95;
+      margin-top: 6px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .chip {
+      font-size: 11px;
+      color: #2a3550;
+      border: 1px solid #d9e1ef;
+      background: #ffffff;
+      padding: 4px 8px;
+      border-radius: 999px;
+    }
+
+    .json-panel {
+      margin-top: 10px;
+      border: 1px solid #e7ebf3;
+      background: #ffffff;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .json-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-bottom: 1px solid #eef2fb;
+      background: #fbfcff;
+      font-size: 12px;
+      color: #243045;
+      font-weight: 700;
+    }
+
+    .json-actions { display: flex; gap: 8px; align-items: center; }
+
+    .mini-btn {
+      border: 1px solid #d9e1ef;
+      background: #ffffff;
+      color: #23314a;
+      padding: 6px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      cursor: pointer;
+    }
+
+    .mini-btn:hover { background: #f4f7ff; }
+
+    .json-body {
+      padding: 10px;
+      background: #f7f9fe;
+      color: #22304a;
+      font-size: 12px;
+      overflow: auto;
+      max-height: 320px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin: 0;
+    }
+
+    .muted { color: #6b7a95; font-size: 12px; }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+
+  <script>
+    const { createApp, ref, computed, nextTick } = Vue;
+
+    createApp({
+      setup() {
+        const activeMenu = ref("chain_generator");
+
+        const mode = ref("abstract"); // abstract | executable
+        const lastDownload = ref("");
+
+        // ✅ 记录后端返回的 bpmn_url（用于 BPMN Download 打开新页）
+        const bpmnUrl = ref("");
+
+        // ✅ 布局方向：默认竖排（更适合工作流，且更不容易横向超出）
+        const layoutDir = ref("vertical"); // vertical | horizontal
+
+        const latestData = ref(null);
+
+        const presets = ref([
+          { id: "p1", title: "Extract the 2024 river network for shilou county", query: "extract the 2024 river network for shilou county" },
+          { id: "p2", title: "Extract the river network for yanchang county for year 2025", query: "extract the river network for yanchang county for year 2025" },
+          {
+            id: "p3",
+            title: "Based on the historical rainfall data of the Chengcun River basin, please utilize a hydrological model to predict future runoff.",
+            query: `Based on the historical rainfall data of the Chengcun River basin,
+please utilize a hydrological model to predict future runoff.`
+          }
+        ]);
+        const selectedPresetId = ref(presets.value[0].id);
+
+        const backendUrl = ref("http://127.0.0.1:8000/generate");
+
+        const status = ref("idle"); // idle | running | ok | err
+        const statusText = computed(() => {
+          if (status.value === "running") return "Running...";
+          if (status.value === "ok") return "Ready";
+          if (status.value === "err") return "Error (check console / network)";
+          return "Idle";
+        });
+        const statusDotClass = computed(() => {
+          if (status.value === "running") return "busy";
+          if (status.value === "ok") return "ok";
+          if (status.value === "err") return "err";
+          return "";
+        });
+
+        const messages = ref([
+          {
+            role: "assistant",
+            title: "Demo assistant",
+            text: "Select a preset input, then click Submit. ",
+            data: null
+          }
+        ]);
+
+        const chatBodyRef = ref(null);
+        const selectedPreset = computed(() => presets.value.find(p => p.id === selectedPresetId.value));
+
+        function clickMenu(key) {
+          activeMenu.value = key;
+          if (key !== "chain_generator") console.log("[menu click]", key);
+        }
+
+        // =========================
+        // Workflow graph utilities
+        // =========================
+        function normalizeEdge(e) {
+          if (!e) return null;
+          if (Array.isArray(e) && e.length >= 2) return [String(e[0]), String(e[1])];
+          return null;
+        }
+
+        function isHttpNode(id) {
+          const s = String(id || "");
+          return s.startsWith("http://") || s.startsWith("https://");
+        }
+
+        function buildGraphFromEdgesOrSingle(edgesOrNode) {
+          const edges = [];
+          const nodeSet = new Set();
+
+          if (Array.isArray(edgesOrNode)) {
+            edgesOrNode.forEach(er => {
+              const e = normalizeEdge(er);
+              if (!e) return;
+              const [s, t] = e;
+              edges.push({ source: s, target: t });
+              nodeSet.add(s);
+              nodeSet.add(t);
+            });
+          } else if (typeof edgesOrNode === "string" && edgesOrNode.trim()) {
+            nodeSet.add(edgesOrNode.trim());
+          }
+
+          const nodes = Array.from(nodeSet).map(id => ({ id }));
+          return { nodes, edges };
+        }
+
+        /**
+         * ✅ 自动减少交叉：层级固定后，使用 barycenter heuristic 做同层排序（forward/backward sweep）
+         */
+        function layoutGraph(graph, dir = "vertical") {
+          const nodes = graph.nodes.map(n => ({ ...n }));
+          const edges = graph.edges.map(e => ({ ...e }));
+
+          // 单节点：放中间
+          if (nodes.length === 1 && edges.length === 0) {
+            const NODE_W = 220, NODE_H = 52, PAD = 30;
+            const width = Math.max(520, NODE_W + PAD * 2);
+            const height = Math.max(520, NODE_H + PAD * 2);
+            return {
+              nodes: [{ ...nodes[0], x: (width - NODE_W) / 2, y: (height - NODE_H) / 2, w: NODE_W, h: NODE_H }],
+              edges: [],
+              width, height
+            };
+          }
+
+          // indeg/out/in adjacency
+          const indeg = new Map();
+          const out = new Map();
+          const inc = new Map();
+          nodes.forEach(n => {
+            indeg.set(n.id, 0);
+            out.set(n.id, []);
+            inc.set(n.id, []);
+          });
+          edges.forEach(e => {
+            if (!indeg.has(e.source)) indeg.set(e.source, 0);
+            if (!indeg.has(e.target)) indeg.set(e.target, 0);
+            if (!out.has(e.source)) out.set(e.source, []);
+            if (!inc.has(e.target)) inc.set(e.target, []);
+            out.get(e.source).push(e.target);
+            inc.get(e.target).push(e.source);
+            indeg.set(e.target, (indeg.get(e.target) || 0) + 1);
+          });
+
+          // Kahn topo
+          const q = [];
+          indeg.forEach((v, k) => { if (v === 0) q.push(k); });
+          const topo = [];
+          const indeg2 = new Map(indeg);
+          while (q.length) {
+            const u = q.shift();
+            topo.push(u);
+            (out.get(u) || []).forEach(v => {
+              indeg2.set(v, (indeg2.get(v) || 0) - 1);
+              if (indeg2.get(v) === 0) q.push(v);
+            });
+          }
+
+          const hasCycle = topo.length !== nodes.length;
+          const order = hasCycle ? nodes.map(n => n.id) : topo;
+
+          // longest-path levels
+          const level = new Map();
+          nodes.forEach(n => level.set(n.id, 0));
+          order.forEach(u => {
+            const lu = level.get(u) || 0;
+            (out.get(u) || []).forEach(v => level.set(v, Math.max(level.get(v) || 0, lu + 1)));
+          });
+
+          // group by level
+          const groups = new Map();
+          nodes.forEach(n => {
+            const lv = level.get(n.id) || 0;
+            if (!groups.has(lv)) groups.set(lv, []);
+            groups.get(lv).push(n.id);
+          });
+
+          // 初始顺序：字典序
+          groups.forEach(arr => arr.sort((a, b) => String(a).localeCompare(String(b))));
+
+          // max level
+          let maxLevel = 0;
+          groups.forEach((_, lv) => { if (lv > maxLevel) maxLevel = lv; });
+
+          // build a quick "position index" lookup for each level
+          const posIndex = new Map(); // key: `${lv}::${id}` -> idx
+          function rebuildPosIndex() {
+            posIndex.clear();
+            groups.forEach((arr, lv) => {
+              arr.forEach((id, idx) => posIndex.set(lv + "::" + id, idx));
+            });
+          }
+          rebuildPosIndex();
+
+          function barycenterScore(id, neighborIds, neighborLevel) {
+            if (!neighborIds || neighborIds.length === 0) return Number.POSITIVE_INFINITY;
+            let sum = 0, cnt = 0;
+            neighborIds.forEach(nid => {
+              const key = neighborLevel + "::" + nid;
+              if (posIndex.has(key)) {
+                sum += posIndex.get(key);
+                cnt += 1;
+              }
+            });
+            if (cnt === 0) return Number.POSITIVE_INFINITY;
+            return sum / cnt;
+          }
+
+          function sortLevelByBarycenter(lv, usePrev) {
+            const arr = (groups.get(lv) || []).slice();
+            const neighborLevel = usePrev ? (lv - 1) : (lv + 1);
+            if (!groups.has(neighborLevel)) return;
+
+            arr.sort((a, b) => {
+              const neighA = usePrev ? (inc.get(a) || []) : (out.get(a) || []);
+              const neighB = usePrev ? (inc.get(b) || []) : (out.get(b) || []);
+              const sa = barycenterScore(a, neighA, neighborLevel);
+              const sb = barycenterScore(b, neighB, neighborLevel);
+
+              if (sa === sb) return String(a).localeCompare(String(b));
+              if (!isFinite(sa) && isFinite(sb)) return 1;
+              if (isFinite(sa) && !isFinite(sb)) return -1;
+              return sa - sb;
+            });
+
+            groups.set(lv, arr);
+          }
+
+          const SWEEPS = 6;
+          for (let s = 0; s < SWEEPS; s++) {
+            for (let lv = 1; lv <= maxLevel; lv++) sortLevelByBarycenter(lv, true);
+            rebuildPosIndex();
+            for (let lv = maxLevel - 1; lv >= 0; lv--) sortLevelByBarycenter(lv, false);
+            rebuildPosIndex();
+          }
+
+          // Layout constants
+          const NODE_W = 180;
+          const NODE_H = 46;
+          const PAD = 30;
+
+          const GAP_MAIN = dir === "vertical" ? 70 : 80;  // 层间距
+          const GAP_CROSS = dir === "vertical" ? 26 : 36; // 同层间距
+
+          const positions = new Map();
+          let maxRight = 0;
+          let maxBottom = 0;
+
+          for (let lv = 0; lv <= maxLevel; lv++) {
+            const arr = groups.get(lv) || [];
+            arr.forEach((id, idx) => {
+              let x, y;
+              if (dir === "vertical") {
+                x = PAD + idx * (NODE_W + GAP_CROSS);
+                y = PAD + lv * (NODE_H + GAP_MAIN);
+              } else {
+                x = PAD + lv * (NODE_W + GAP_MAIN);
+                y = PAD + idx * (NODE_H + GAP_CROSS);
+              }
+
+              positions.set(id, { x, y, w: NODE_W, h: NODE_H });
+              maxRight = Math.max(maxRight, x + NODE_W);
+              maxBottom = Math.max(maxBottom, y + NODE_H);
+            });
+          }
+
+          const width = Math.max(520, maxRight + PAD);
+          const height = Math.max(520, maxBottom + PAD);
+
+          const laidNodes = nodes.map(n => ({ ...n, ...(positions.get(n.id) || { x: PAD, y: PAD, w: NODE_W, h: NODE_H }) }));
+
+          // Edge endpoints
+          const laidEdges = edges.map(e => {
+            const sp = positions.get(e.source);
+            const tp = positions.get(e.target);
+            if (!sp || !tp) return { ...e, x1: 0, y1: 0, x2: 0, y2: 0 };
+
+            if (dir === "vertical") {
+              const x1 = sp.x + sp.w / 2;
+              const y1 = sp.y + sp.h;
+              const x2 = tp.x + tp.w / 2;
+              const y2 = tp.y;
+              return { ...e, x1, y1, x2, y2 };
+            } else {
+              const x1 = sp.x + sp.w;
+              const y1 = sp.y + sp.h / 2;
+              const x2 = tp.x;
+              const y2 = tp.y + tp.h / 2;
+              return { ...e, x1, y1, x2, y2 };
+            }
+          });
+
+          return { nodes: laidNodes, edges: laidEdges, width, height };
+        }
+
+        // ====== pickers ======
+        function pickAbstractEdgesOrSingleNode(d) {
+          const v = d?.resources?.edges_service_level;
+          if (Array.isArray(v)) return v;
+          if (typeof v === "string" && v.trim()) return v.trim();
+          return [];
+        }
+
+        function pickExecutableEdges(d) {
+          const v1 = d?.resources?.service_chain_info;
+          if (Array.isArray(v1) && Array.isArray(v1[0]) && v1[0].length >= 2) return v1;
+          return [];
+        }
+
+        const abstractEdgesOrNode = computed(() => pickAbstractEdgesOrSingleNode(latestData.value));
+        const executableEdges = computed(() => pickExecutableEdges(latestData.value));
+
+        const currentEdgesOrNode = computed(() => {
+          if (mode.value === "abstract") return abstractEdgesOrNode.value;
+          return executableEdges.value;
+        });
+
+        const hasWorkflowData = computed(() => {
+          const v = currentEdgesOrNode.value;
+          if (Array.isArray(v)) return v.length > 0;
+          if (typeof v === "string") return v.trim().length > 0;
+          return false;
+        });
+
+        const workflowGraph = computed(() => {
+          if (!hasWorkflowData.value) return null;
+          const g = buildGraphFromEdgesOrSingle(currentEdgesOrNode.value);
+          return layoutGraph(g, layoutDir.value);
+        });
+
+        function nodeFill(nid) {
+          if (mode.value === "executable" && isHttpNode(nid)) return "#fdba74";
+          return "#bbf7d0";
+        }
+
+        function nodeStroke(nid) {
+          if (mode.value === "executable" && isHttpNode(nid)) return "#f97316";
+          return "#34d399";
+        }
+
+        // ✅ 曲线连线（Bezier）
+        function edgePath(e) {
+          const x1 = e.x1, y1 = e.y1, x2 = e.x2, y2 = e.y2;
+
+          if (layoutDir.value === "vertical") {
+            const dy = Math.max(30, (y2 - y1) * 0.6);
+            const c1x = x1, c1y = y1 + dy;
+            const c2x = x2, c2y = y2 - dy;
+            return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+          } else {
+            const dx = Math.max(30, (x2 - x1) * 0.6);
+            const c1x = x1 + dx, c1y = y1;
+            const c2x = x2 - dx, c2y = y2;
+            return `M ${x1} ${y1} C ${c1x} ${c1y}, ${c2x} ${c2y}, ${x2} ${y2}`;
+          }
+        }
+
+        function setMode(next) {
+          mode.value = next;
+          console.log("[mode]", next);
+        }
+
+        // ✅ 修改：BPMN Download 直接打开后端返回的 bpmn_url（xml）
+        function onBpmnDownload() {
+          const url = String(bpmnUrl.value || "").trim();
+          if (!url) {
+            alert("No bpmn_url found. Please click Submit to get backend data first.");
+            return;
+          }
+
+          // 新页面打开 xml（若浏览器拦截弹窗，需要用户手动允许）
+          window.open(url, "_blank", "noopener,noreferrer");
+
+          lastDownload.value = new Date().toLocaleString();
+        }
+
+        function selectPreset(id) { selectedPresetId.value = id; }
+
+        async function submitToBackend() {
+          const query = selectedPreset.value.query;
+          status.value = "running";
+
+          messages.value.push({
+            role: "user",
+            title: "Preset input",
+            text: "Waiting for LLM generation...",
+            // data: { query }
+          });
+
+          try {
+            const resp = await fetch(backendUrl.value, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ query })
+            });
+
+            if (!resp.ok) {
+              const text = await resp.text().catch(() => "");
+              throw new Error(`HTTP ${resp.status} ${resp.statusText}\n${text}`);
+            }
+
+            const data = await resp.json();
+            latestData.value = data;
+            
+            // ✅ 记录 bpmn_url（兼容 data.resources.bpmn_url 为相对/绝对）
+            const raw = data?.resources?.bpmn_url || "";
+            try {
+              bpmnUrl.value = raw ? new URL(raw, window.location.href).toString() : "";
+            } catch {
+              bpmnUrl.value = String(raw || "");
+            }
+
+            // 你的原来这行有点问题：data.resources.resources 看起来像拼写/结构不确定，这里不动你逻辑但避免未声明变量报错
+            const resourcesList = data?.resources?.resources || [];
+
+            const displayText =
+              "Intermediate data and generated results from the service chain are provided as follow:\n" +
+              (Array.isArray(resourcesList)
+                ? resourcesList.join("\n")
+                : String(resourcesList));
+
+            // ====== 只把 resources.resources 传给前端显示 ======
+            messages.value.push({
+              role: "assistant",
+              title: "LLM output",
+              text: displayText,
+              data: null
+            });
+
+            status.value = "ok";
+          } catch (e) {
+            console.error(e);
+            bpmnUrl.value = ""; // ✅ 出错时清空，避免误打开旧链接
+            messages.value.push({
+              role: "assistant",
+              title: "LLM output",
+              text: "Backend request failed.",
+              data: { error: String(e) }
+            });
+            status.value = "err";
+          }
+
+          await nextTick();
+          if (chatBodyRef.value) chatBodyRef.value.scrollTop = chatBodyRef.value.scrollHeight;
+        }
+
+        function clearOutput() {
+          messages.value = [{
+            role: "assistant",
+            title: "Demo assistant",
+            text: "Select a preset input, then click Submit.",
+            data: null
+          }];
+          status.value = "idle";
+          latestData.value = null;
+          bpmnUrl.value = ""; // ✅ 清空记录
+        }
+
+        async function copyJson(obj) {
+          try { await navigator.clipboard.writeText(JSON.stringify(obj, null, 2)); }
+          catch (e) { console.warn("Clipboard copy failed:", e); }
+        }
+
+        function displayNodeLabel(id) {
+          const s = String(id);
+          if (s.startsWith("http://") || s.startsWith("https://")) {
+            const parts = s.split("/");
+            const tail = parts[parts.length - 1] || parts[parts.length - 2] || s;
+            return tail.length > 22 ? tail.slice(0, 22) + "…" : tail;
+          }
+          return s.length > 24 ? s.slice(0, 24) + "…" : s;
+        }
+
+        return {
+          activeMenu, clickMenu,
+          mode, setMode, onBpmnDownload, lastDownload,
+          layoutDir,
+          presets, selectedPresetId, selectedPreset, selectPreset,
+          backendUrl,
+          submitToBackend, clearOutput,
+          statusText, statusDotClass,
+          messages, chatBodyRef,
+          copyJson,
+          latestData,
+          hasWorkflowData,
+          workflowGraph,
+          displayNodeLabel,
+          nodeFill,
+          nodeStroke,
+          edgePath,
+          // 可选：如果你想在 UI 里展示当前 bpmn url
+          bpmnUrl
+        };
+      },
+
+      template: `
+        <div class="app">
+          <!-- Left -->
+          <aside class="sidebar">
+            <div class="brand">
+              <div class="dot"></div>
+              <div class="brand-title">GeoSquare 2.0</div>
+            </div>
+
+            <nav class="menu">
+              <div class="menu-item" :class="{ active: activeMenu === 'home' }" @click="clickMenu('home')">
+                <span class="icon">🏠</span><span>Home</span>
+              </div>
+
+              <div class="menu-section">Service Resource</div>
+              <div class="menu-item" :class="{ active: activeMenu === 'service_resource' }" @click="clickMenu('service_resource')">
+                <span class="icon">📦</span><span>Service Resource</span>
+              </div>
+
+              <div class="menu-section">Service Network</div>
+              <div class="menu-item" :class="{ active: activeMenu === 'service_collaboration' }" @click="clickMenu('service_collaboration')">
+                <span class="icon">🔗</span><span>Service Collaboration</span>
+              </div>
+
+              <div class="menu-section">Chain</div>
+              <div class="menu-item" :class="{ active: activeMenu === 'chain_builder' }" @click="clickMenu('chain_builder')">
+                <span class="icon">🧩</span><span>chain builder</span>
+              </div>
+              <div class="menu-item" :class="{ active: activeMenu === 'chain_executor' }" @click="clickMenu('chain_executor')">
+                <span class="icon">▶️</span><span>chain executor</span>
+              </div>
+
+              <div class="menu-section">Recommend</div>
+              <div class="menu-item" :class="{ active: activeMenu === 'service_recommend' }" @click="clickMenu('service_recommend')">
+                <span class="icon">✨</span><span>Service Recommender</span>
+              </div>
+
+              <div class="menu-section">Generator</div>
+              <div class="menu-item" :class="{ active: activeMenu === 'chain_generator' }" @click="clickMenu('chain_generator')">
+                <span class="icon">⚙️</span><span>Chain Generator</span>
+              </div>
+            </nav>
+          </aside>
+
+          <!-- Middle -->
+          <main class="main">
+            <header class="topbar">
+              <button class="btn" :class="{ primary: mode === 'abstract' }" @click="setMode('abstract')">
+                Abstract Workflow
+              </button>
+              <button class="btn" :class="{ primary: mode === 'executable' }" @click="setMode('executable')">
+                Executable Service Chain
+              </button>
+
+              <!-- ✅ 仍保留 danger 样式：点击将打开 bpmnUrl -->
+              <button class="btn danger" @click="onBpmnDownload">
+                BPMN Download
+              </button>
+            </header>
+
+            <div class="canvas-wrap">
+              <div class="canvas">
+                <div class="wf-wrap" style="max-width: 1100px; width: 100%;">
+                  <div>
+                    <div class="empty-title">Workflow Canvas</div>
+                    <div class="empty-desc">
+                      For abstract workflow/executable service chain visualization
+                      <br/>
+                      current mode：<b>{{ mode }}</b>,
+                      layout：<b>{{ layoutDir }}</b>
+                      <span v-if="bpmnUrl">
+                        <br/>bpmn_url：<span class="hint">{{ bpmnUrl }}</span>
+                      </span>
+                    </div>
+                    <div v-if="lastDownload" class="hint" style="margin-top:10px;">
+                      Last BPMN download: {{ lastDownload }}
+                    </div>
+                  </div>
+
+                  <div class="wf-legend">
+                    <div class="wf-chip">
+                      <span class="wf-dot"></span>
+                      <span>Node: light green</span>
+                    </div>
+                    <div class="wf-chip">
+                      <span class="wf-dot orange"></span>
+                      <span>Data node: orange (executable only)</span>
+                    </div>
+                    <div class="wf-chip" v-if="latestData">
+                      <span>data loaded</span>
+                    </div>
+                  </div>
+
+                  <div class="wf-stage">
+                    <template v-if="workflowGraph">
+                      <svg
+                        :width="workflowGraph.width"
+                        :height="workflowGraph.height"
+                        :viewBox="('0 0 ' + workflowGraph.width + ' ' + workflowGraph.height)"
+                        style="display:block;"
+                      >
+                        <defs>
+                          <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                            <path d="M0,0 L10,3 L0,6 Z" fill="#64748b"></path>
+                          </marker>
+                        </defs>
+
+                        <!-- edges (curved) -->
+                        <g>
+                          <path
+                            v-for="(e, i) in workflowGraph.edges"
+                            :key="'e'+i"
+                            :d="edgePath(e)"
+                            fill="none"
+                            stroke="#94a3b8"
+                            stroke-width="2"
+                            marker-end="url(#arrow)"
+                          />
+                        </g>
+
+                        <!-- nodes -->
+                        <g>
+                          <g v-for="(n, i) in workflowGraph.nodes" :key="'n'+i">
+                            <rect
+                              :x="n.x" :y="n.y"
+                              :width="n.w" :height="n.h"
+                              rx="12" ry="12"
+                              :fill="nodeFill(n.id)"
+                              :stroke="nodeStroke(n.id)"
+                              stroke-width="2"
+                            />
+                            <text
+                              :x="n.x + n.w/2"
+                              :y="n.y + n.h/2 + 4"
+                              text-anchor="middle"
+                              font-size="12"
+                              fill="#0f172a"
+                              style="user-select:none;"
+                            >
+                              {{ displayNodeLabel(n.id) }}
+                            </text>
+                            <title>{{ n.id }}</title>
+                          </g>
+                        </g>
+                      </svg>
+                    </template>
+
+                    <template v-else>
+                      <div class="muted" style="padding: 18px;">
+                        No workflow to display.
+                        <br/>
+                        1) Click <b>Submit</b> to get backend data.
+                        <br/>
+                        2) Then click <b>Abstract Workflow</b> or <b>Executable Service Chain</b>.
+                      </div>
+                    </template>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </main>
+
+          <!-- Right -->
+          <aside class="right">
+            <div class="right-header">
+              <div>LLM Assistant</div>
+              <div class="pill">Chain Generator</div>
+            </div>
+
+            <div class="panel">
+              <!-- Presets -->
+              <div class="preset-card">
+                <div class="preset-title">
+                  <h3>Preset Inputs</h3>
+                  <div class="hint">select → submit</div>
+                </div>
+
+                <div class="preset-tabs">
+                  <div
+                    v-for="p in presets"
+                    :key="p.id"
+                    class="tab"
+                    :class="{ active: selectedPresetId === p.id }"
+                    @click="selectPreset(p.id)"
+                    :title="p.query"
+                  >
+                    {{ p.title }}
+                    <span class="small" v-if="selectedPresetId === p.id">selected</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Submit row -->
+              <div class="submit-row">
+                <div class="status">
+                  <span class="s-dot" :class="statusDotClass"></span>
+                  <span class="status-text">{{ statusText }}</span>
+                </div>
+                <button class="btn" @click="clearOutput">Clear</button>
+                <button class="btn primary" @click="submitToBackend" :disabled="statusDotClass==='busy'">
+                  Submit
+                </button>
+              </div>
+
+              <!-- Output -->
+              <div class="chat-box">
+                <div class="chat-head">
+                  <h3>Output</h3>
+                  <div class="hint">POST: {{ backendUrl }}</div>
+                </div>
+
+                <div class="chat-body" ref="chatBodyRef">
+                  <div v-for="(m, idx) in messages" :key="idx" class="msg">
+                    <div class="avatar" :class="{ user: m.role === 'user' }"></div>
+
+                    <div style="min-width:0; width:100%;">
+                      <div class="bubble" :class="{ user: m.role === 'user' }">
+                        <div style="font-weight:700; font-size:12px; margin-bottom:6px; color:#243045;">
+                          {{ m.title }}
+                        </div>
+                        <div style="white-space: pre-wrap; word-break: break-word;">
+                          {{ m.text }}
+                        </div>
+
+                        <div v-if="m.meta && m.meta.length" class="meta">
+                          <span v-for="(t, i) in m.meta" :key="i" class="chip">{{ t }}</span>
+                        </div>
+
+                        <div v-if="m.data" class="json-panel">
+                          <div class="json-head">
+                            <span>JSON</span>
+                            <div class="json-actions">
+                              <button class="mini-btn" @click="copyJson(m.data)">Copy</button>
+                            </div>
+                          </div>
+                          <pre class="json-body">{{ JSON.stringify(m.data, null, 2) }}</pre>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div v-if="messages.length === 0" class="muted">
+                    No output yet.
+                  </div>
+                </div>
+              </div>
+            </div>
+          </aside>
+        </div>
+      `
+    }).mount("#app");
+  </script>
+</body>
+</html>

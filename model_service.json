@@ -1,0 +1,26 @@
+[
+    {
+      "name": "Xinanjiang model",
+      "descr": "The Xinanjiang model is a rainfall-runoff, distributed, basin hydrological model for use in humid and semi-humid regions.",
+      "input": "rainfall data",
+      "output": "predict future runoff data",
+      "in_fields": ["rainfall_data_table"],
+      "out_fields": ["future_rainoff_prediction_table"],
+      "api": {
+        "method": "POST",
+        "path": "/v1/hydro/future-runoff-prediction"
+      }
+    },
+    {
+      "name": "hydrological_model",
+      "descr": "A hydrological model for testing ",
+      "input": "param1",
+      "output": "param2",
+      "in_fields": ["param1"],
+      "out_fields": ["param2"],
+      "api": {
+        "method": "POST",
+        "path": "/v1/hydro/test_model"
+      }
+    }
+]
