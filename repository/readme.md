@@ -1,0 +1,1 @@
+Use "python -m http.server 8010" in this dictionary for data service running
