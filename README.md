@@ -1,5 +1,5 @@
 # Hydrological-Analysis-Service
-The demo code for An automatic hydrological service chain generation method by integrating LLM and embedding model.
+The demo for An automatic hydrological service chain generation method by integrating LLM and embedding model.
 
 River network extraction
 
